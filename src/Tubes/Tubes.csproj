@@ -8,7 +8,7 @@
         <Description>Tubes is a pipes and filters pattern implementation.</Description>
         <Copyright>Copyright (c) 2025  Sydney du Plooy</Copyright>
         <PackageProjectUrl>https://github.com/sduplooy/tubes/</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/sduplooy/tubes/blob/main/LICENSE</PackageLicenseUrl>
+        <PackageLicense>GPL-3.0</PackageLicense>
         <RepositoryUrl>https://github.com/sduplooy/tubes/</RepositoryUrl>
         <RepositoryType>Git</RepositoryType>
     </PropertyGroup>
@@ -22,5 +22,5 @@
         <PackageDescription>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../../RELEASE-NOTES"))</PackageDescription>
       </PropertyGroup>
     </Target>
-    
+
 </Project>
