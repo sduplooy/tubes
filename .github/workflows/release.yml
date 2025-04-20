@@ -28,6 +28,6 @@ jobs:
     - name: Pack
       run: dotnet pack src/Tubes/Tubes.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
     - name: Push
-      run: dotnet nuget push tubes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json -SkipDuplicate --api-key ${NUGET_TOKEN}
+      run: dotnet nuget push tubes.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_TOKEN}
       env:
         NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
