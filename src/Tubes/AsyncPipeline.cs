@@ -2,25 +2,25 @@ namespace Tubes;
 
 public sealed class AsyncPipeline<TMessage>
 {
-    private readonly List<Action<TMessage, CancellationToken>> _filters;
+    private readonly List<Func<TMessage, CancellationToken, Task>> _filters;
 
     public AsyncPipeline()
     {
         _filters = [];
     }
 
-    internal AsyncPipeline(List<Action<TMessage, CancellationToken>> filters)
+    internal AsyncPipeline(List<Func<TMessage, CancellationToken, Task>> filters)
     {
         _filters = filters ?? throw new ArgumentNullException(nameof(filters));
     }
     
-    public AsyncPipeline<TMessage> Register(Action<TMessage, CancellationToken> filter)
+    public AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter)
     {
         _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
         return this;
     }
     
-    public void ExecuteAsync(TMessage message, CancellationToken cancellationToken = default)
+    public async Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(message);
         
@@ -29,7 +29,7 @@ public sealed class AsyncPipeline<TMessage>
             if (cancellationToken.IsCancellationRequested || message is IStopProcessing { Stop: true })
                 break;
             
-            filter(message, cancellationToken);
+            await filter(message, cancellationToken).ConfigureAwait(false);
         }
     }
 }
