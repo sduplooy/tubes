@@ -1,47 +1,59 @@
-namespace Tubes.Aspects;
+using System;
+using System.Threading;
 
-public record struct RetryOptions
+namespace Tubes.Aspects
 {
-    public RetryOptions(int maxRetries, TimeSpan slideTime)
+    public class RetryOptions
     {
-        if(maxRetries < 0)
-            throw new ArgumentOutOfRangeException(nameof(maxRetries), "Max retries must be greater than 0.");
-        
-        MaxRetries = maxRetries;
-        SlideTime = slideTime;
+        public RetryOptions(int maxRetries, TimeSpan slideTime)
+        {
+            if (maxRetries < 0)
+                throw new ArgumentOutOfRangeException(nameof(maxRetries), "Max retries must be greater than 0.");
+
+            MaxRetries = maxRetries;
+            SlideTime = slideTime;
+        }
+
+        public int MaxRetries { get; }
+        public TimeSpan SlideTime { get; }
     }
     
-    public int MaxRetries { get; }
-    public TimeSpan SlideTime { get; }
-}
-
-public sealed class RetryAspect<TMessage>(Action<TMessage, CancellationToken> next, RetryOptions retryOptions)
-{
-    private int _currentRetry;
-    
-    public void Execute(TMessage message, CancellationToken cancellationToken = default)
+    public sealed class RetryAspect<TMessage>
     {
-        ArgumentNullException.ThrowIfNull(next);
-        ArgumentNullException.ThrowIfNull(message);
+        private readonly Action<TMessage, CancellationToken> _next;
+        private readonly RetryOptions _retryOptions;
+        private int _currentRetry;
 
-        try
+        public RetryAspect(Action<TMessage, CancellationToken> next, RetryOptions retryOptions)
         {
-            if (cancellationToken.IsCancellationRequested) 
-                return;
-            
-            next(message, cancellationToken);
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _retryOptions = retryOptions ?? throw new ArgumentNullException(nameof(retryOptions));
         }
-        catch (Exception)
+        
+        public void Execute(TMessage message, CancellationToken cancellationToken = default)
         {
-            _currentRetry++;
-            
-            if (_currentRetry <= retryOptions.MaxRetries)
+            if(message == null)
+                throw new ArgumentNullException(nameof(message));
+
+            try
             {
-                Thread.Sleep(retryOptions.SlideTime * _currentRetry);
-                Execute(message, cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                _next(message, cancellationToken);
             }
-            else 
-                throw;
+            catch (Exception)
+            {
+                _currentRetry++;
+
+                if (_currentRetry <= _retryOptions.MaxRetries)
+                {
+                    Thread.Sleep(_retryOptions.SlideTime.Milliseconds * _currentRetry);
+                    Execute(message, cancellationToken);
+                }
+                else
+                    throw;
+            }
         }
     }
 }

@@ -1,41 +1,46 @@
-namespace Tubes;
+using System;
+using System.Collections.Generic;
 
-public interface IPipeline<TMessage>
+namespace Tubes
 {
-    Pipeline<TMessage> Register(Action<TMessage> filter);
-    void Execute(TMessage message);
-}
-
-public sealed class Pipeline<TMessage> : IPipeline<TMessage>
-{
-    private readonly List<Action<TMessage>> _filters;
-
-    public Pipeline()
+    public interface IPipeline<TMessage>
     {
-        _filters = [];
+        Pipeline<TMessage> Register(Action<TMessage> filter);
+        void Execute(TMessage message);
     }
 
-    internal Pipeline(List<Action<TMessage>> filters)
+    public sealed class Pipeline<TMessage> : IPipeline<TMessage>
     {
-        _filters = filters ?? throw new ArgumentNullException(nameof(filters));
-    }
-    
-    public Pipeline<TMessage> Register(Action<TMessage> filter)
-    {
-        _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
-        return this;
-    }
-    
-    public void Execute(TMessage message)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        
-        _filters.ForEach(f =>
+        private readonly List<Action<TMessage>> _filters;
+
+        public Pipeline()
         {
-            if (message is IStopProcessing { Stop: true })
-                return;
+            _filters = new List<Action<TMessage>>();
+        }
 
-            f(message);
-        });
+        internal Pipeline(List<Action<TMessage>> filters)
+        {
+            _filters = filters ?? throw new ArgumentNullException(nameof(filters));
+        }
+
+        public Pipeline<TMessage> Register(Action<TMessage> filter)
+        {
+            _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
+            return this;
+        }
+
+        public void Execute(TMessage message)
+        {
+            if(message == null)
+                throw new ArgumentNullException(nameof(message));
+
+            _filters.ForEach(f =>
+            {
+                if (message is IStopProcessing stopProcessing && stopProcessing.Stop)
+                    return;
+
+                f(message);
+            });
+        }
     }
 }

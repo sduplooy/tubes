@@ -10,25 +10,19 @@ public class MessageLoggingAspectTests
     [Fact]
     public void It_should_throw_an_exception_when_next_is_null()
     {
-        const string message = "test message";
-        
         Action<string, CancellationToken> next = null!;
         var logger = new Mock<ILogger<MessageLoggingAspect<string>>>().Object;
-        var aspect = new MessageLoggingAspect<string>(next, logger);
 
-        Should.Throw<ArgumentNullException>(() => aspect.Execute(message, CancellationToken.None));
+        Should.Throw<ArgumentNullException>(() => new MessageLoggingAspect<string>(next, logger));
     }
 
     [Fact]
     public void It_should_throw_an_exception_when_logger_is_null()
     { 
-        const string message = "test message";
-        
         var next = new Mock<Action<string, CancellationToken>>().Object;
         ILogger<MessageLoggingAspect<string>> logger = null!;
-        var aspect = new MessageLoggingAspect<string>(next, logger);
 
-        Should.Throw<ArgumentNullException>(() => aspect.Execute(message, CancellationToken.None));
+        Should.Throw<ArgumentNullException>(() => new MessageLoggingAspect<string>(next, logger));
     }
 
     [Fact]
@@ -39,7 +33,7 @@ public class MessageLoggingAspectTests
         var aspect = new MessageLoggingAspect<string>(next, logger);
 
         Should.Throw<ArgumentNullException>(() => 
-                aspect.Execute(null!, CancellationToken.None)).ParamName.ShouldBe("message");
+            aspect.Execute(null!, CancellationToken.None)).ParamName.ShouldBe("message");
     }
 
     [Fact]

@@ -20,10 +20,8 @@ public class RetryAspectTests
     {
         Action<string, CancellationToken> next = null!;
         var options = new RetryOptions(3, TimeSpan.FromMilliseconds(10));
-        var aspect = new RetryAspect<string>(next, options);
 
-        Should.Throw<ArgumentNullException>(() => 
-            aspect.Execute("test", CancellationToken.None));
+        Should.Throw<ArgumentNullException>(() => new RetryAspect<string>(next, options));
     }
 
     [Fact]

@@ -1,41 +1,51 @@
-namespace Tubes;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-public interface IAsyncPipeline<TMessage>
+namespace Tubes
 {
-    AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter);
-    Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
-}
-
-public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
-{
-    private readonly List<Func<TMessage, CancellationToken, Task>> _filters;
-
-    public AsyncPipeline()
+    public interface IAsyncPipeline<TMessage>
     {
-        _filters = [];
+        AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter);
+        Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
     }
 
-    internal AsyncPipeline(List<Func<TMessage, CancellationToken, Task>> filters)
+    public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
     {
-        _filters = filters ?? throw new ArgumentNullException(nameof(filters));
-    }
-    
-    public AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter)
-    {
-        _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
-        return this;
-    }
-    
-    public async Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        
-        foreach (var filter in _filters)
+        private readonly List<Func<TMessage, CancellationToken, Task>> _filters;
+
+        public AsyncPipeline()
         {
-            if (cancellationToken.IsCancellationRequested || message is IStopProcessing { Stop: true })
-                break;
-            
-            await filter(message, cancellationToken).ConfigureAwait(false);
+            _filters = new List<Func<TMessage, CancellationToken, Task>>();
+        }
+
+        internal AsyncPipeline(List<Func<TMessage, CancellationToken, Task>> filters)
+        {
+            _filters = filters ?? throw new ArgumentNullException(nameof(filters));
+        }
+
+        public AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter)
+        {
+            _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
+            return this;
+        }
+
+        public async Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default)
+        {
+            if(message == null)
+                throw new ArgumentNullException(nameof(message));
+
+            foreach (var filter in _filters)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+                
+                if(message is IStopProcessing stopProcessing && stopProcessing.Stop)
+                    break;
+
+                await filter(message, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }

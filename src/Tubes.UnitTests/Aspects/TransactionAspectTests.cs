@@ -11,10 +11,8 @@ public class TransactionAspectTests
     public void It_should_throw_an_exception_when_next_is_null()
     {
         Action<string, CancellationToken> next = null!;
-        var aspect = new TransactionAspect<string>(next);
 
-        Should.Throw<ArgumentNullException>(() => 
-            aspect.Execute("test", CancellationToken.None));
+        Should.Throw<ArgumentNullException>(() => new TransactionAspect<string>(next));
     }
 
     [Fact]

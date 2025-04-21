@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>NET9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <Title>Tubes</Title>
         <Description>Tubes is a pipes and filters pattern implementation.</Description>
         <Copyright>Copyright (c) 2025  Sydney du Plooy</Copyright>

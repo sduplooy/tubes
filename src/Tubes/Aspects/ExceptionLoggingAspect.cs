@@ -1,28 +1,39 @@
+using System;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace Tubes.Aspects;
-
-public sealed class ExceptionLoggingAspect<T>(Action<T, CancellationToken> next, ILogger<ExceptionLoggingAspect<T>> logger)
+namespace Tubes.Aspects
 {
-    public void Execute(T message, CancellationToken cancellationToken = default)
+    public sealed class ExceptionLoggingAspect<T>
     {
-        ArgumentNullException.ThrowIfNull(next);
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(message);
-        
-        try
+        private readonly Action<T, CancellationToken> _next;
+        private readonly ILogger<ExceptionLoggingAspect<T>> _logger;
+
+        public ExceptionLoggingAspect(Action<T, CancellationToken> next, ILogger<ExceptionLoggingAspect<T>> logger)
         {
-            if (cancellationToken.IsCancellationRequested) 
-                return;
-            
-            next(message, cancellationToken);
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-        catch (Exception ex)
+        
+        public void Execute(T message, CancellationToken cancellationToken = default)
         {
-            if(logger.IsEnabled(LogLevel.Error))
-                logger.LogError(ex, "Exception in {Handler}: {Message}", typeof(T).Name, message.GetType().Name);
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
             
-            throw;
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                _next(message, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                if (_logger.IsEnabled(LogLevel.Error))
+                    _logger.LogError(ex, "Exception in {Handler}: {Message}", typeof(T).Name, message.GetType().Name);
+
+                throw;
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
-namespace Tubes;
-
-public interface IStopProcessing
+namespace Tubes
 {
-    bool Stop { get; set; }
+    public interface IStopProcessing
+    {
+        bool Stop { get; set; }
+    }
 }
