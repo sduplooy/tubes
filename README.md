@@ -78,3 +78,7 @@ public void Invoke(LoginMessage message)
     errorHandler.Execute(message);
 }
 ```
+
+## Credits
+
+Icon by [ColourCreatype](https://freeicons.io/tools-and-construction-26768/pipe-pipeline-water-instalation-construction-icon-949729) on [freeicons.io](https://freeicons.io)
