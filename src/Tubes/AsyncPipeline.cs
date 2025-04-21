@@ -1,6 +1,12 @@
 namespace Tubes;
 
-public sealed class AsyncPipeline<TMessage>
+public interface IAsyncPipeline<TMessage>
+{
+    AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter);
+    Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
+}
+
+public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
 {
     private readonly List<Func<TMessage, CancellationToken, Task>> _filters;
 

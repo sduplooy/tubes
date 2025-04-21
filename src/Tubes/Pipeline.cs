@@ -1,6 +1,12 @@
 namespace Tubes;
 
-public sealed class Pipeline<TMessage>
+public interface IPipeline<TMessage>
+{
+    Pipeline<TMessage> Register(Action<TMessage> filter);
+    void Execute(TMessage message);
+}
+
+public sealed class Pipeline<TMessage> : IPipeline<TMessage>
 {
     private readonly List<Action<TMessage>> _filters;
 
