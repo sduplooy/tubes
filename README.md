@@ -1,3 +1,4 @@
+![NuGet Downloads](https://img.shields.io/nuget/dt/Tubes)
 ![GitHub License](https://img.shields.io/github/license/sduplooy/tubes)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/sduplooy/tubes)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/sduplooy/tubes)
@@ -8,6 +9,12 @@
 # Tubes
 
 Tubes is a [pipes and filters pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/PipesAndFilters.html) implementation. It is based on two [posts written by Steve Bate](https://eventuallyconsistent.net/tag/pipe-and-filters) which is unfortunately no longer available.
+
+## Installation
+
+To install Tubes, run the following command:
+
+`dotnet add package Tubes --version 1.1.0`
 
 ## Usage
 
