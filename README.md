@@ -14,7 +14,7 @@ Tubes is a [pipes and filters pattern](https://www.enterpriseintegrationpatterns
 
 To install Tubes, run the following command:
 
-`dotnet add package Tubes --version 1.1.0`
+`dotnet add package Tubes --version 1.2.0`
 
 ## Usage
 
