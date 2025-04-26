@@ -8,7 +8,7 @@ public interface IPipeline<TMessage>
 {
     Pipeline<TMessage> Register<TFilter>() where TFilter : IFilter<TMessage>;
     Pipeline<TMessage> Register(IFilter<TMessage> filter);
-    void Execute(TMessage message);
+    void Process(TMessage message);
 }
 
 public sealed class Pipeline<TMessage> : IPipeline<TMessage>
@@ -48,7 +48,7 @@ public sealed class Pipeline<TMessage> : IPipeline<TMessage>
         return this;
     }
     
-    public void Execute(TMessage message)
+    public void Process(TMessage message)
     {
         if(message == null)
             throw new ArgumentNullException(nameof(message));
@@ -58,7 +58,7 @@ public sealed class Pipeline<TMessage> : IPipeline<TMessage>
             if (message is IStopProcessing { Stop: true })
                 return;
 
-            f.Execute(message);
+            f.Process(message);
         });
     }
 }

@@ -8,7 +8,7 @@ namespace Tubes.UnitTests;
 public class PipelineTests
 {
     [Fact]
-    public void It_should_register_the_filter()
+    public void It_should_register_the_filter_as_part_of_the_pipeline()
     {
         // Arrange
         var filters = new List<IFilter<string>>();
@@ -24,7 +24,7 @@ public class PipelineTests
     }
 
     [Fact]
-    public void It_should_throw_an_exception_for_a_null_filter()
+    public void It_should_throw_an_exception_when_trying_to_register_a_null_filter()
     {
         // Arrange
         var pipeline = new Pipeline<string>();
@@ -34,7 +34,7 @@ public class PipelineTests
     }
 
     [Fact]
-    public void It_should_throw_an_exception_for_a_null_message()
+    public void It_should_throw_an_exception_when_processing_a_null_message()
     {
         // Arrange
         var pipeline = new Pipeline<string>();
@@ -42,7 +42,7 @@ public class PipelineTests
         pipeline.Register(filter);
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => pipeline.Execute(null!)).ParamName.ShouldBe("message");
+        Should.Throw<ArgumentNullException>(() => pipeline.Process(null!)).ParamName.ShouldBe("message");
     }
 
     [Fact]
@@ -53,20 +53,20 @@ public class PipelineTests
         var callCount = 0;
 
         var filter1 = new Mock<IFilter<string>>();
-        filter1.Setup(f => f.Execute(It.IsAny<string>())).Callback(() => callCount++);
+        filter1.Setup(f => f.Process(It.IsAny<string>())).Callback(() => callCount++);
 
         var filter2 = new Mock<IFilter<string>>();
-        filter2.Setup(f => f.Execute(It.IsAny<string>())).Callback(() => callCount++);
+        filter2.Setup(f => f.Process(It.IsAny<string>())).Callback(() => callCount++);
 
         pipeline.Register(filter1.Object).Register(filter2.Object);
 
         // Act
-        pipeline.Execute("test");
+        pipeline.Process("test");
 
         // Assert
         callCount.ShouldBe(2);
-        filter1.Verify(f => f.Execute("test"), Times.Once);
-        filter2.Verify(f => f.Execute("test"), Times.Once);
+        filter1.Verify(f => f.Process("test"), Times.Once);
+        filter2.Verify(f => f.Process("test"), Times.Once);
     }
 
     [Fact]
@@ -77,15 +77,15 @@ public class PipelineTests
         var executionOrder = new List<int>();
 
         var filter1 = new Mock<IFilter<string>>();
-        filter1.Setup(f => f.Execute(It.IsAny<string>())).Callback(() => executionOrder.Add(1));
+        filter1.Setup(f => f.Process(It.IsAny<string>())).Callback(() => executionOrder.Add(1));
 
         var filter2 = new Mock<IFilter<string>>();
-        filter2.Setup(f => f.Execute(It.IsAny<string>())).Callback(() => executionOrder.Add(2));
+        filter2.Setup(f => f.Process(It.IsAny<string>())).Callback(() => executionOrder.Add(2));
 
         pipeline.Register(filter1.Object).Register(filter2.Object);
 
         // Act
-        pipeline.Execute("test");
+        pipeline.Process("test");
 
         // Assert
         executionOrder.ShouldBe(new[] { 1, 2 });
@@ -101,25 +101,25 @@ public class PipelineTests
         var pipeline = new Pipeline<TestMessage>();
 
         var filter1 = new Mock<IFilter<TestMessage>>();
-        filter1.Setup(f => f.Execute(It.IsAny<TestMessage>())).Callback(() => callCount++);
+        filter1.Setup(f => f.Process(It.IsAny<TestMessage>())).Callback(() => callCount++);
 
         var filter2 = new Mock<IFilter<TestMessage>>();
-        filter2.Setup(f => f.Execute(It.IsAny<TestMessage>())).Callback(() => message.Stop = true);
+        filter2.Setup(f => f.Process(It.IsAny<TestMessage>())).Callback(() => message.Stop = true);
 
         var filter3 = new Mock<IFilter<TestMessage>>();
-        filter3.Setup(f => f.Execute(It.IsAny<TestMessage>())).Callback(() => callCount++);
+        filter3.Setup(f => f.Process(It.IsAny<TestMessage>())).Callback(() => callCount++);
 
         pipeline.Register(filter1.Object).Register(filter2.Object).Register(filter3.Object);
 
         // Act
-        pipeline.Execute(message);
+        pipeline.Process(message);
 
         // Assert
         callCount.ShouldBe(1);
         message.Stop.ShouldBeTrue();
-        filter1.Verify(f => f.Execute(message), Times.Once);
-        filter2.Verify(f => f.Execute(message), Times.Once);
-        filter3.Verify(f => f.Execute(message), Times.Never);
+        filter1.Verify(f => f.Process(message), Times.Once);
+        filter2.Verify(f => f.Process(message), Times.Once);
+        filter3.Verify(f => f.Process(message), Times.Never);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class PipelineTests
     
     public class TestFilter : IFilter<TestMessage>
     {
-        public void Execute(TestMessage message)
+        public void Process(TestMessage message)
         {
         }
     }

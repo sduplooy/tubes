@@ -10,7 +10,7 @@ public interface IAsyncPipeline<TMessage>
 {
     AsyncPipeline<TMessage> Register<TFilter>()  where TFilter : IAsyncFilter<TMessage>;
     AsyncPipeline<TMessage> Register(IAsyncFilter<TMessage> filter);
-    Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
+    Task ProcessAsync(TMessage message, CancellationToken cancellationToken = default);
 }
 
 public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
@@ -50,7 +50,7 @@ public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
         return this;
     }
 
-    public async Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(TMessage message, CancellationToken cancellationToken = default)
     {
         if(message == null)
             throw new ArgumentNullException(nameof(message));
@@ -63,7 +63,7 @@ public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
             if(message is IStopProcessing { Stop: true })
                 break;
 
-            await filter.ExecuteAsync(message, cancellationToken).ConfigureAwait(false);
+            await filter.ProcessAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }
 }

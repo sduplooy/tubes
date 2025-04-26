@@ -5,5 +5,5 @@ namespace Tubes;
 
 public interface IAsyncFilter<in TMessage>
 {
-    Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
+    Task ProcessAsync(TMessage message, CancellationToken cancellationToken = default);
 }

@@ -7,7 +7,7 @@ namespace Tubes.UnitTests;
 public class AsyncPipelineTests
 {
     [Fact]
-    public void It_should_register_the_filter()
+    public void It_should_register_the_filter_as_part_of_the_pipeline()
     {
         // Arrange
         var filters = new List<IAsyncFilter<string>>();
@@ -23,7 +23,7 @@ public class AsyncPipelineTests
     }
 
     [Fact]
-    public void It_should_throw_an_exception_for_a_null_filter()
+    public void It_should_throw_an_exception_for_when_trying_to_register_a_null_filter()
     {
         // Arrange
         var pipeline = new AsyncPipeline<string>();
@@ -33,7 +33,7 @@ public class AsyncPipelineTests
     }
 
     [Fact]
-    public async Task It_should_throw_an_exception_for_a_null_message()
+    public async Task It_should_throw_an_exception_when_trying_to_process_a_null_message()
     {
         // Arrange
         var pipeline = new AsyncPipeline<string>();
@@ -41,7 +41,7 @@ public class AsyncPipelineTests
         pipeline.Register(filter);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<ArgumentNullException>(() => pipeline.ExecuteAsync(null!));
+        var exception = await Should.ThrowAsync<ArgumentNullException>(() => pipeline.ProcessAsync(null!));
         exception.ParamName.ShouldBe("message");
     }
 
@@ -53,24 +53,24 @@ public class AsyncPipelineTests
         var callCount = 0;
 
         var filter1 = new Mock<IAsyncFilter<string>>();
-        filter1.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter1.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => callCount++);
 
         var filter2 = new Mock<IAsyncFilter<string>>();
-        filter2.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter2.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => callCount++);
 
         pipeline.Register(filter1.Object).Register(filter2.Object);
 
         // Act
-        await pipeline.ExecuteAsync("test");
+        await pipeline.ProcessAsync("test");
 
         // Assert
         callCount.ShouldBe(2);
-        filter1.Verify(f => f.ExecuteAsync("test", It.IsAny<CancellationToken>()), Times.Once);
-        filter2.Verify(f => f.ExecuteAsync("test", It.IsAny<CancellationToken>()), Times.Once);
+        filter1.Verify(f => f.ProcessAsync("test", It.IsAny<CancellationToken>()), Times.Once);
+        filter2.Verify(f => f.ProcessAsync("test", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -81,19 +81,19 @@ public class AsyncPipelineTests
         var executionOrder = new List<int>();
 
         var filter1 = new Mock<IAsyncFilter<string>>();
-        filter1.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter1.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => executionOrder.Add(1));
 
         var filter2 = new Mock<IAsyncFilter<string>>();
-        filter2.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter2.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => executionOrder.Add(2));
 
         pipeline.Register(filter1.Object).Register(filter2.Object);
 
         // Act
-        await pipeline.ExecuteAsync("test");
+        await pipeline.ProcessAsync("test");
 
         // Assert
         executionOrder.ShouldBe(new[] { 1, 2 });
@@ -109,31 +109,31 @@ public class AsyncPipelineTests
         var pipeline = new AsyncPipeline<TestMessage>();
 
         var filter1 = new Mock<IAsyncFilter<TestMessage>>();
-        filter1.Setup(f => f.ExecuteAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
+        filter1.Setup(f => f.ProcessAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => callCount++);
 
         var filter2 = new Mock<IAsyncFilter<TestMessage>>();
-        filter2.Setup(f => f.ExecuteAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
+        filter2.Setup(f => f.ProcessAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => message.Stop = true);
 
         var filter3 = new Mock<IAsyncFilter<TestMessage>>();
-        filter3.Setup(f => f.ExecuteAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
+        filter3.Setup(f => f.ProcessAsync(It.IsAny<TestMessage>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => callCount++);
 
         pipeline.Register(filter1.Object).Register(filter2.Object).Register(filter3.Object);
 
         // Act
-        await pipeline.ExecuteAsync(message);
+        await pipeline.ProcessAsync(message);
 
         // Assert
         callCount.ShouldBe(1);
         message.Stop.ShouldBeTrue();
-        filter1.Verify(f => f.ExecuteAsync(message, It.IsAny<CancellationToken>()), Times.Once);
-        filter2.Verify(f => f.ExecuteAsync(message, It.IsAny<CancellationToken>()), Times.Once);
-        filter3.Verify(f => f.ExecuteAsync(message, It.IsAny<CancellationToken>()), Times.Never);
+        filter1.Verify(f => f.ProcessAsync(message, It.IsAny<CancellationToken>()), Times.Once);
+        filter2.Verify(f => f.ProcessAsync(message, It.IsAny<CancellationToken>()), Times.Once);
+        filter3.Verify(f => f.ProcessAsync(message, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class AsyncPipelineTests
         var pipeline = new AsyncPipeline<string>();
 
         var filter1 = new Mock<IAsyncFilter<string>>();
-        filter1.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter1.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(async () =>
                {
                    callCount++;
@@ -155,21 +155,21 @@ public class AsyncPipelineTests
                });
 
         var filter2 = new Mock<IAsyncFilter<string>>();
-        filter2.Setup(f => f.ExecuteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        filter2.Setup(f => f.ProcessAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                .Returns(Task.CompletedTask)
                .Callback(() => callCount++);
 
         pipeline.Register(filter1.Object).Register(filter2.Object);
 
         // Act
-        var task = pipeline.ExecuteAsync(message, cts.Token);
+        var task = pipeline.ProcessAsync(message, cts.Token);
         await cts.CancelAsync();
 
         // Assert
         await Should.ThrowAsync<TaskCanceledException>(() => task);
         callCount.ShouldBe(1);
-        filter1.Verify(f => f.ExecuteAsync(message, It.IsAny<CancellationToken>()), Times.Once);
-        filter2.Verify(f => f.ExecuteAsync(message, It.IsAny<CancellationToken>()), Times.Never);
+        filter1.Verify(f => f.ProcessAsync(message, It.IsAny<CancellationToken>()), Times.Once);
+        filter2.Verify(f => f.ProcessAsync(message, It.IsAny<CancellationToken>()), Times.Never);
     }
     
     [Fact]
@@ -210,7 +210,7 @@ public class AsyncPipelineTests
     
     public class TestFilter : IAsyncFilter<TestMessage>
     {
-        public Task ExecuteAsync(TestMessage message, CancellationToken cancellationToken = default)
+        public Task ProcessAsync(TestMessage message, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
