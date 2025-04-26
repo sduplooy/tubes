@@ -34,7 +34,7 @@ public class ExceptionLoggingAspectTests
         const string message = "test message";
         var nextCalled = false;
 
-        Action<string, CancellationToken> next = (msg, ct) => {
+        Action<string, CancellationToken> next = (msg, _) => {
             nextCalled = true;
             msg.ShouldBe(message);
         };

@@ -2,9 +2,6 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Tubes.UnitTests")]
 
-namespace Tubes
-{
-    public interface IAssemblyMarker
-    {
-    }
-}
+namespace Tubes;
+
+public interface IAssemblyMarker;

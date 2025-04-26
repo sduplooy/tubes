@@ -1,59 +1,52 @@
 using System;
 using System.Threading;
 
-namespace Tubes.Aspects
+namespace Tubes.Aspects;
+
+public class RetryOptions
 {
-    public class RetryOptions
+    public RetryOptions(int maxRetries, TimeSpan slideTime)
     {
-        public RetryOptions(int maxRetries, TimeSpan slideTime)
-        {
-            if (maxRetries < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries), "Max retries must be greater than 0.");
+        if (maxRetries < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxRetries), "Max retries must be greater than 0.");
 
-            MaxRetries = maxRetries;
-            SlideTime = slideTime;
-        }
-
-        public int MaxRetries { get; }
-        public TimeSpan SlideTime { get; }
+        MaxRetries = maxRetries;
+        SlideTime = slideTime;
     }
+
+    public int MaxRetries { get; }
+    public TimeSpan SlideTime { get; }
+}
     
-    public sealed class RetryAspect<TMessage>
+public sealed class RetryAspect<TMessage>(Action<TMessage, CancellationToken> next, RetryOptions retryOptions)
+{
+    private readonly Action<TMessage, CancellationToken> _next = next ?? throw new ArgumentNullException(nameof(next));
+    private readonly RetryOptions _retryOptions = retryOptions ?? throw new ArgumentNullException(nameof(retryOptions));
+    private int _currentRetry;
+
+    public void Execute(TMessage message, CancellationToken cancellationToken = default)
     {
-        private readonly Action<TMessage, CancellationToken> _next;
-        private readonly RetryOptions _retryOptions;
-        private int _currentRetry;
+        if(message == null)
+            throw new ArgumentNullException(nameof(message));
 
-        public RetryAspect(Action<TMessage, CancellationToken> next, RetryOptions retryOptions)
+        try
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _retryOptions = retryOptions ?? throw new ArgumentNullException(nameof(retryOptions));
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            _next(message, cancellationToken);
         }
-        
-        public void Execute(TMessage message, CancellationToken cancellationToken = default)
+        catch (Exception)
         {
-            if(message == null)
-                throw new ArgumentNullException(nameof(message));
+            _currentRetry++;
 
-            try
+            if (_currentRetry <= _retryOptions.MaxRetries)
             {
-                if (cancellationToken.IsCancellationRequested)
-                    return;
-
-                _next(message, cancellationToken);
+                Thread.Sleep(_retryOptions.SlideTime.Milliseconds * _currentRetry);
+                Execute(message, cancellationToken);
             }
-            catch (Exception)
-            {
-                _currentRetry++;
-
-                if (_currentRetry <= _retryOptions.MaxRetries)
-                {
-                    Thread.Sleep(_retryOptions.SlideTime.Milliseconds * _currentRetry);
-                    Execute(message, cancellationToken);
-                }
-                else
-                    throw;
-            }
+            else
+                throw;
         }
     }
 }
