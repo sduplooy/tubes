@@ -1,7 +1,3 @@
 # Tubes
 
-Tubes is a pipes and filters pattern implementation. It provides two types of pipelines viz., a synchronous and an asynchronous pipeline.
-
-## v1.1
-
-Adds interfaces for Pipeline and AsyncPipeline.
+Tubes is a [pipe and filters pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/PipesAndFilters.html) implementation.

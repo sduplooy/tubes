@@ -8,30 +8,34 @@
 
 # Tubes
 
-Tubes is a [pipes and filters pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/PipesAndFilters.html) implementation. It is based on two [posts written by Steve Bate](https://eventuallyconsistent.net/tag/pipe-and-filters) which is unfortunately no longer available.
+Tubes is a [pipe and filters pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/PipesAndFilters.html) implementation. It is based on two [posts written by Steve Bate](https://eventuallyconsistent.net/tag/pipe-and-filters) which is unfortunately no longer available.
 
 ## Installation
 
 To install Tubes, run the following command:
 
-`dotnet add package Tubes --version 1.3.0`
+```sh
+dotnet add package Tubes
+```
 
 ## Usage
 
-This library provides two types of pipelines viz., a synchronous and an asynchronous pipeline.
+### Synchronous Pipeline
 
-### Synchronous
+Synchronous filters must implement `IFilter<TMessage>` where `TMessage` is the type of message that will be processed
+through the pipeline.
 
-The synchronous pipeline is used as follows:
+The pipeline is then constructed using the `Register` method on the `Pipeline<TMessage>` class.
+The filters are executed in the order in which they are registered.
 
 ```csharp
 var loginPipeline = new Pipeline<LoginMessage>();
 
-loginPipeline.Register(msg => new CheckUserSuppliedCredentials(msg))
-    .Register(msg => new CheckApiKeyIsEnabledForClient(msg))
-    .Register(msg => new IsUserLoginAllowed(msg))
-    .Register(msg => new ValidateAgainstMembershipApi(msg))
-    .Register(msg => new GetUserDetails(msg));
+loginPipeline.Register(new CheckUserSuppliedCredentials())
+    .Register(new ValidateAgainstMembershipApi())
+    .Register(new CheckApiKeyIsEnabledForClient())
+    .Register(new IsUserLoginAllowed())
+    .Register(new GetUserDetails());
 
 loginPipeline.Execute(new LoginMessage {
     Username = "User",
@@ -39,18 +43,21 @@ loginPipeline.Execute(new LoginMessage {
 });
 ```
 
-### Asynchronous
+### Asynchronous Pipeline
 
-The asynchronous pipeline is used as follows:
+Asynchronous filters must implement `IAsyncFilter<TMessage>` where `TMessage` is the type of message that will be processed through the pipeline.
+
+The pipeline is then constructed using the `Register` method on the `AsyncPipeline<TMessage>` class.
+The filters are executed in the order in which they are registered.
 
 ```csharp
 var loginPipeline = new AsyncPipeline<LoginMessage>();
 
-loginPipeline.Register(msg => new CheckUserSuppliedCredentials(msg))
-    .Register(msg => new CheckApiKeyIsEnabledForClient(msg))
-    .Register(msg => new IsUserLoginAllowed(msg))
-    .Register(msg => new ValidateAgainstMembershipApi(msg))
-    .Register(msg => new GetUserDetails(msg));
+loginPipeline.Register(new CheckUserSuppliedCredentials())
+    .Register(new CheckApiKeyIsEnabledForClient())
+    .Register(new IsUserLoginAllowed())
+    .Register(new ValidateAgainstMembershipApi())
+    .Register(new GetUserDetails());
 
 var cts = new CancellationTokenSource();
 

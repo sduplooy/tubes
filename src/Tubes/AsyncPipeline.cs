@@ -7,25 +7,25 @@ namespace Tubes;
 
 public interface IAsyncPipeline<TMessage>
 {
-    AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter);
+    AsyncPipeline<TMessage> Register(IAsyncFilter<TMessage> filter);
     Task ExecuteAsync(TMessage message, CancellationToken cancellationToken = default);
 }
 
 public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
 {
-    private readonly List<Func<TMessage, CancellationToken, Task>> _filters;
+    private readonly List<IAsyncFilter<TMessage>> _filters;
 
     public AsyncPipeline()
     {
         _filters = [];
     }
 
-    internal AsyncPipeline(List<Func<TMessage, CancellationToken, Task>> filters)
+    internal AsyncPipeline(List<IAsyncFilter<TMessage>> filters)
     {
         _filters = filters ?? throw new ArgumentNullException(nameof(filters));
     }
 
-    public AsyncPipeline<TMessage> Register(Func<TMessage, CancellationToken, Task> filter)
+    public AsyncPipeline<TMessage> Register(IAsyncFilter<TMessage> filter)
     {
         _filters.Add(filter ?? throw new ArgumentNullException(nameof(filter)));
         return this;
@@ -44,7 +44,7 @@ public sealed class AsyncPipeline<TMessage> : IAsyncPipeline<TMessage>
             if(message is IStopProcessing { Stop: true })
                 break;
 
-            await filter(message, cancellationToken).ConfigureAwait(false);
+            await filter.ExecuteAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }
 }
