@@ -66,14 +66,6 @@ If an input message implements the `IStopProcessing` interface, the pipeline (sy
 
 The `AsyncPipeline` respects the `CancellationToken` and will stop processing any subsequent filters when cancellation is requested.
 
-### IMessage<TResult, TError>
-
-The `IMessage<TResult, TError>` interface is used to define a message that returns a result or an error.
-
-### Result<T, TError>
-
-The `Result<T, TError>` is the return type of the `Result` property on the IMessage<TResult, TError> interface. 
-
 ## Aspects
 
 The library also includes several aspects, viz.:
