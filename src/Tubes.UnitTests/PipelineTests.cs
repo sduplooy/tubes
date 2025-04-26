@@ -1,4 +1,6 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using Shouldly;
 
 namespace Tubes.UnitTests;
@@ -118,6 +120,49 @@ public class PipelineTests
         filter1.Verify(f => f.Execute(message), Times.Once);
         filter2.Verify(f => f.Execute(message), Times.Once);
         filter3.Verify(f => f.Execute(message), Times.Never);
+    }
+
+    [Fact]
+    public void It_should_resolve_the_filter_using_the_service_provider()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddScoped<TestFilter>();
+        
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        
+        // Act & Assert
+        var pipeline = new Pipeline<TestMessage>(serviceProvider);
+        pipeline.Register<TestFilter>(); //does not throw
+    }
+    
+    [Fact]
+    public void It_should_throw_an_exception_if_the_pipeline_was_constructed_without_a_service_provider()
+    {
+        // Arrange, Act & Assert
+        var pipeline = new Pipeline<TestMessage>();
+        Assert.Throws<Exception>(() => pipeline.Register<TestFilter>())
+            .Message.ShouldBe("Service provider is not available. Did you construct the pipeline with a service provider?");
+    }
+    
+    [Fact]
+    public void It_should_throw_an_exception_when_the_filter_is_not_registered_with_the_service_provider()
+    {
+        // Arrange
+        var serviceCollection = new ServiceCollection();
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        
+        // Act & Assert
+        var pipeline = new Pipeline<TestMessage>(serviceProvider);
+        Assert.Throws<Exception>(() => pipeline.Register<TestFilter>())
+            .Message.ShouldBe("Filter 'TestFilter' is not registered with the service provider.");
+    }
+    
+    public class TestFilter : IFilter<TestMessage>
+    {
+        public void Execute(TestMessage message)
+        {
+        }
     }
 
     public class TestMessage : IStopProcessing
